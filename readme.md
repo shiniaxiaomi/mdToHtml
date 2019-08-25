@@ -1,3 +1,5 @@
+# 项目组成
+
 项目有主要的 4 个文件组成
 
 - css
@@ -21,3 +23,14 @@
 - template.html
 
   html的模板,转化的html页面都是参照这个模板进行转化的
+
+# 项目初始化
+
+- 项目初始化
+
+  `npm install`或者`npm i`即可
+
+- 项目运行
+
+  `npm run build`
+
