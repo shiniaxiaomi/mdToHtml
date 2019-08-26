@@ -186,12 +186,10 @@ p > code {
   font-size: 13.6px;
 }
 
-/* pre {
-  background-color: #303030;
-  border-radius: 15px;
-  color: white;
-  box-shadow: 2px 2px 14px 5px #929090;
-} */
+/* 图片 */
+img{
+  max-width: 100%;
+}
 
 /* 代码块 */
 pre {

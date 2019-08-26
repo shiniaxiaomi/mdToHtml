@@ -1,9 +1,9 @@
 //最好是使用绝对路径
-const srcPath = "mynote"; //源路径
-const targetPath = "html"; //目标路径
+const srcDir = "C:\\Users\\yingjie.lu\\Documents\\note"; //源路径
+const targetDir = "C:\\Users\\yingjie.lu\\Desktop\\html"; //目标路径
 
-const cssPath = "";
-const highlightCssPath = "";
+const baseCssPath = targetDir+"/css/github.css";
+const highlightCssPath = targetDir+"/css/highlight.css";
 
 // Create reference instance
 const marked = require("marked"); //markdown解析
@@ -43,63 +43,67 @@ renderer.link = function(href, title, text) {
   return `<a href="${href}" target="_blank">${text}</a>`;
 };
 
-// 遍历目录下的所有文件
-function mapDir(srcDir, targetDir, callback, finish) {
-  //如果目录不存在,则创建
-  fs.stat(targetDir, { recursive: true }, (err, stats) => {
-    if (err) {
-      fs.mkdir(targetDir, err => {
-        if (err) {
-          console.log(err);
-        }
-      });
-    }
-  });
 
+
+//遍历目录,到每个目录或文件的时候回调
+function mapDir(srcDir,targetDir,fileCallback,dirCallback){
+  //如果目录不存在,则创建
+  if(!fs.existsSync(targetDir)){
+    fs.mkdirSync(targetDir,{recursive :true},err=>{});
+  }
+
+  //读取目录
   fs.readdir(srcDir, function(err, files) {
-    if (err) {
-      console.error(err);
+    if(files==undefined){
+      console.log(srcDir+"文件夹下没有文件");
       return;
     }
     files.forEach((filename, index) => {
       let srcPath = path.join(srcDir, filename);
       let targetPath = path.join(targetDir, filename);
       fs.stat(srcPath, (err, stats) => {
-        // 读取文件信息
-        if (err) {
-          console.log("获取文件stats失败");
-          return;
-        }
         if (stats.isDirectory()) {
-          //对.git文件夹不做处理(如果路径中不包含.img并且包换.git,说明是.git仓库文件)
-          if (srcPath.search(".git") != -1 && srcPath.search(".img") == -1) {
-            return;
+          var flag=dirCallback(srcPath,targetPath);
+          if(flag){
+            mapDir(srcPath, targetPath,fileCallback,dirCallback);
           }
-          mapDir(srcPath, targetPath, callback, finish);
         } else if (stats.isFile()) {
-          //如果是markdown文件,则回调转化成html
-          if (srcPath.search(".md") != -1) {
-            callback && callback(srcPath, targetPath, filename); //获取到了源文件路径和目标文件路径
-          } else {
-            //如果是其他文件,则进行复制
-            fs.writeFileSync(targetPath, fs.readFileSync(srcPath));
-          }
+          fileCallback(srcPath,targetPath,filename);
         }
       });
-      if (index === files.length - 1) {
-        finish && finish();
-      }
     });
   });
+}
+
+//删除目录
+function delDir(path){
+  let files = [];
+  if(fs.existsSync(path)){
+      files = fs.readdirSync(path);
+      files.forEach((file, index) => {
+          let curPath = path + "/" + file;
+          if(fs.statSync(curPath).isDirectory()){
+              delDir(curPath); //递归删除文件夹
+          } else {
+              fs.unlinkSync(curPath); //删除文件
+          }
+      });
+      fs.rmdirSync(path);
+  }
+}
+
+//复制css目录
+function copyCssDir(srcDir,targetDir){
+  mapDir(srcDir,targetDir,function(srcPath,targetPath,filename){
+    fs.writeFileSync(targetPath, fs.readFileSync(srcPath));//复制文件
+  },function(srcPath,targetPath){
+    return true;
+  });  
 }
 
 //将markdown生成html
 function build(srcPath, targetPath, filename, tempalte) {
   fs.readFile(srcPath, (err, data) => {
-    if (err) {
-      console.error(err);
-      return;
-    }
     var body = marked(data.toString(), { renderer: renderer });
 
     //进行模板的参数替换
@@ -107,7 +111,8 @@ function build(srcPath, targetPath, filename, tempalte) {
       .replace("${title}", filename)
       .replace("${keywords}", filename)
       .replace("${content}", filename)
-      .replace("${css}", css1 + css2)
+      .replace("${baseCssPath}", baseCssPath)
+      .replace("${highlightCssPath}", highlightCssPath)
       .replace("${body}", body);
 
     fs.writeFile(
@@ -125,18 +130,31 @@ function build(srcPath, targetPath, filename, tempalte) {
   });
 }
 
-// Compile
+//将markdown转化成html
+function mdToHtml(srcDir,targetDir){
+  mapDir(srcDir,targetDir,function(srcPath, targetPath, filename) {
+      //如果是markdown文件,则回调转化成html
+      if (srcPath.search(".md") != -1) {
+        build(srcPath, targetPath, filename, template);
+      } else {
+        //如果是其他文件,则进行复制
+        fs.writeFileSync(targetPath, fs.readFileSync(srcPath));
+      }
+  },function(srcPath,targetPath) {
+      //对.git文件夹不做处理(如果路径中不包含.img并且包换.git,说明是.git仓库文件)
+      if (srcPath.search(".git") != -1 && srcPath.search(".img") == -1) {
+        return false;
+      }
+      return true;
+  });
+}
+
+
 // 同步读取 模板内容
 var template = fs.readFileSync("template.html").toString();
-// 同步读取 css样式
-var css1 = fs.readFileSync(__dirname + "/css/github.css").toString();
-var css2 = fs.readFileSync(__dirname + "/css/highlight.css").toString();
-
-mapDir(
-  srcPath,
-  targetPath,
-  function(srcPath, targetPath, filename) {
-    build(srcPath, targetPath, filename, template);
-  },
-  function() {}
-);
+// 删除目标路径下的所有文件
+delDir(targetDir);
+// 复制css到目标路径下
+copyCssDir("./css",targetDir+"/css");
+// // 将markdown转化成html
+mdToHtml(srcDir,targetDir);
