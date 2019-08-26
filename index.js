@@ -1,5 +1,5 @@
 //最好是使用绝对路径
-const srcDir = "C:\\Users\\yingjie.lu\\Documents\\note"; //源路径
+const srcDir = "C:\\Users\\yingjie.lu\\Desktop\\note"; //源路径
 const targetDir = "C:\\Users\\yingjie.lu\\Desktop\\html"; //目标路径
 
 const baseCssPath = targetDir+"/css/github.css";
@@ -43,6 +43,140 @@ renderer.link = function(href, title, text) {
   return `<a href="${href}" target="_blank">${text}</a>`;
 };
 
+//给h1-h6标题添加序号
+renderer.heading = function (text, level) {
+
+  if(flag==false){
+    h1_sum=0;
+    h2_sum=0;
+    h3_sum=0;
+    h4_sum=0;
+    h5_sum=0;
+    h6_sum=0;
+    flag=true;
+    console.log(sidebar)
+    sidebar=[];
+  }
+
+
+  if(flag){
+    var content="";
+    var number="";
+    switch(level){
+      case 1: 
+        h1_sum++;
+        h2_sum=0;
+        h3_sum=0;
+        h4_sum=0;
+        h5_sum=0;
+        h6_sum=0;
+        number=`${h1_sum}. `;
+        content=`${text}`;
+
+        //保存h1标签
+        sidebar.push({
+          number:number,
+          data:content,
+          children:[]
+        })
+        
+        break;
+      case 2:
+        h2_sum++;
+        h3_sum=0;
+        h4_sum=0;
+        h5_sum=0;
+        h6_sum=0;
+        number=`${h1_sum}.${h2_sum}. `;
+        content=`${text}`;
+
+        sidebar.map((item,index)=>{
+          if(item.number==h1_sum){
+            sidebar[index].children.push({
+              number:number,
+              data:content,
+              children:[]
+            })
+          }
+        })
+        break;
+      case 3:
+        h3_sum++;
+        h4_sum=0;
+        h5_sum=0;
+        h6_sum=0;
+        number=`${h1_sum}.${h2_sum}.${h3_sum}. `;
+        content=`${text}`;
+
+        sidebar.map((item,index)=>{
+          if(item.number==h1_sum){
+            sidebar[index].children.map((item1,index1)=>{
+              if(item1.number==h2_sum){
+                sidebar[index].children[index1].children.push({
+                  number:number,
+                  data:content,
+                  children:[]
+                })
+              }
+            })
+          }
+        })
+        break;
+      case 4:
+        h4_sum++;
+        h5_sum=0;
+        h6_sum=0;
+        number=`${h1_sum}.${h2_sum}.${h3_sum}.${h4_sum}. `;
+        content=`${text}`;
+
+        sidebar.map((item,index)=>{
+          if(item.number==h1_sum){
+            sidebar[index].children.map((item1,index1)=>{
+              if(item1.number==h2_sum){
+                sidebar[index].children[index1].children.push({
+                  number:number,
+                  data:content,
+                  children:[]
+                })
+              }
+            })
+          }
+        })
+        break;
+      case 5:
+        h5_sum++;
+        h6_sum=0;
+        number=`${h1_sum}.${h2_sum}.${h3_sum}.${h4_sum}.${h5_sum}. `;
+        content=`${text}`;
+        break;
+      case 6:
+        h6_sum++;
+        number=`${h1_sum}.${h2_sum}.${h3_sum}.${h4_sum}.${h5_sum}.${h6_sum}. `;
+        content=`${text}`;
+        break;
+    }
+
+    // var NO=h1_sum+(h2_sum==0?".":"."+h2_sum)+(h3_sum==0?".":"."+h3_sum)+(h4_sum==0?".":"."+h4_sum)+(h5_sum==0?".":"."+h5_sum)+(h6_sum==0?".":"."+h6_sum);
+    // sidebar.map((item,index)=>{
+    //   if(item.number==NO){
+    //     item.children[item].map()
+    //   }
+    // })
+
+ 
+
+    return `<h${level}>`+number+content+`</h${level}>`;
+  }
+
+};
+
+
+function mapNode(sidebar,times,var1,var2,var3,var4,var5,var6){
+  sidebar.children.map((item,index)=>{
+    
+  })
+
+}
 
 
 //遍历目录,到每个目录或文件的时候回调
@@ -104,7 +238,9 @@ function copyCssDir(srcDir,targetDir){
 //将markdown生成html
 function build(srcPath, targetPath, filename, tempalte) {
   fs.readFile(srcPath, (err, data) => {
-    var body = marked(data.toString(), { renderer: renderer });
+    
+    var body = marked(data.toString(), { renderer: renderer }).replace("[TOC]", "");//将[TOC]替换为空
+    flag=false;
 
     //进行模板的参数替换
     var html = template
@@ -150,11 +286,28 @@ function mdToHtml(srcDir,targetDir){
 }
 
 
+var h1_sum=0;
+var h2_sum=0;
+var h3_sum=0;
+var h4_sum=0;
+var h5_sum=0;
+var h6_sum=0;
+var sidebar=[];
+var flag=true;//如果是false,则需要进行count=1
+
 // 同步读取 模板内容
 var template = fs.readFileSync("template.html").toString();
 // 删除目标路径下的所有文件
-delDir(targetDir);
+// delDir(targetDir);
 // 复制css到目标路径下
 copyCssDir("./css",targetDir+"/css");
-// // 将markdown转化成html
+// 将markdown转化成html
 mdToHtml(srcDir,targetDir);
+
+
+// var a=[];
+// a.push({
+//   children:[]
+// })
+
+// a[0].children.push
