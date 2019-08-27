@@ -1,6 +1,6 @@
 //最好是使用绝对路径
-const srcDir = "C:\\Users\\Administrator\\Desktop\\note"; //源路径
-const targetDir = "C:\\Users\\Administrator\\Desktop\\html"; //目标路径
+const srcDir = "C:\\Users\\yingjie.lu\\Desktop\\note"; //源路径
+const targetDir = "C:\\Users\\yingjie.lu\\Desktop\\html"; //目标路径
 
 const baseCssPath = targetDir + "/css/github.css";
 const highlightCssPath = targetDir + "/css/highlight.css";
@@ -53,8 +53,29 @@ renderer.heading = function(text, level) {
     h5_sum = 0;
     h6_sum = 0;
     flag = true;
+    //节点的定义
+    sidebar = {
+      level: 0,
+      data: "",
+      proot: undefined,
+      children: []
+    };
+    treeHtml = "";
 
-    console.log(list);
+    //遍历并递归生成sidebar
+    // list.map(item => {
+    //   findAndAdd(sidebar, item);
+    // });
+    // buildTree(sidebar);
+    // console.log(sidebar)
+    // console.log(treeHtml)
+    console.log(list)
+    list.map(item => {
+        findAndAdd(sidebar, item);
+      });
+      buildTree(sidebar);
+      console.log(sidebar)
+      console.log(treeHtml)
   }
 
   if (flag) {
@@ -68,7 +89,7 @@ renderer.heading = function(text, level) {
         h4_sum = 0;
         h5_sum = 0;
         h6_sum = 0;
-        number = `${h1_sum}. `;
+        number = `${h1_sum}.`;
         content = `${text}`;
 
         break;
@@ -78,7 +99,7 @@ renderer.heading = function(text, level) {
         h4_sum = 0;
         h5_sum = 0;
         h6_sum = 0;
-        number = `${h1_sum}.${h2_sum}. `;
+        number = `${h1_sum}.${h2_sum}.`;
         content = `${text}`;
 
         break;
@@ -87,7 +108,7 @@ renderer.heading = function(text, level) {
         h4_sum = 0;
         h5_sum = 0;
         h6_sum = 0;
-        number = `${h1_sum}.${h2_sum}.${h3_sum}. `;
+        number = `${h1_sum}.${h2_sum}.${h3_sum}.`;
         content = `${text}`;
 
         break;
@@ -95,34 +116,83 @@ renderer.heading = function(text, level) {
         h4_sum++;
         h5_sum = 0;
         h6_sum = 0;
-        number = `${h1_sum}.${h2_sum}.${h3_sum}.${h4_sum}. `;
+        number = `${h1_sum}.${h2_sum}.${h3_sum}.${h4_sum}.`;
         content = `${text}`;
 
         break;
       case 5:
         h5_sum++;
         h6_sum = 0;
-        number = `${h1_sum}.${h2_sum}.${h3_sum}.${h4_sum}.${h5_sum}. `;
+        number = `${h1_sum}.${h2_sum}.${h3_sum}.${h4_sum}.${h5_sum}.`;
         content = `${text}`;
         break;
       case 6:
         h6_sum++;
-        number = `${h1_sum}.${h2_sum}.${h3_sum}.${h4_sum}.${h5_sum}.${h6_sum}. `;
+        number = `${h1_sum}.${h2_sum}.${h3_sum}.${h4_sum}.${h5_sum}.${h6_sum}.`;
         content = `${text}`;
         break;
     }
 
-    var buff = number.split(".");
     list.push({
-      length: buff.length - 1,
-      arr: buff,
-      number: number,
-      data: content
+      level: level,
+      data: number,
+      content: content
     });
 
-    return `<h${level}>` + number + content + `</h${level}>`;
+    return `<h${level}>` + number +" "+ content + `</h${level}>`;
   }
 };
+
+//查找树中node节点对应的子树并添加
+function findAndAdd(srcNode, node) {
+  if (srcNode.children.length == 0) {
+    //到了根节点,则node添加到节点下
+    srcNode.children.push({
+      level: node.level,
+      data: node.data,
+      proot: srcNode,
+      children: []
+    });
+    return;
+  }
+
+  var flag1 = false;
+  //遍历树的子节点
+  srcNode.children.map((item, index) => {
+    //如果node属于该节点下,则再继续遍历
+    if (
+      node.level >= item.level &&
+      node.data.substr(0, item.level) == item.data.substr(0, item.level)
+    ) {
+      flag1 = true;
+      findAndAdd(item, node);
+    }
+    //如果全部遍历完之后还未找到,则说明node属于该树的父节点(即和该树是兄弟节点)
+    if (srcNode.children.length - 1 == index && flag1 == false) {
+      item.proot.children.push({
+        level: node.level,
+        data: node.data,
+        proot: item.proot,
+        children: []
+      });
+    }
+  });
+}
+
+//生成treeHtml树状结构
+function buildTree(sidebar) {
+  if (sidebar.children.length == 0) {
+    treeHtml += "<li>" + sidebar.data + "</li>";
+    return;
+  }
+
+  treeHtml += "<li>" + sidebar.data + "</li>";
+  treeHtml += "<ul>";
+  sidebar.children.map(item => {
+    buildTree(item);
+  });
+  treeHtml += "</ul>";
+}
 
 //遍历目录,到每个目录或文件的时候回调
 function mapDir(srcDir, targetDir, fileCallback, dirCallback) {
@@ -201,6 +271,7 @@ function build(srcPath, targetPath, filename, tempalte) {
       .replace("${content}", filename)
       .replace("${baseCssPath}", baseCssPath)
       .replace("${highlightCssPath}", highlightCssPath)
+      .replace("${treeHtml}", treeHtml)
       .replace("${body}", body);
 
     fs.writeFile(
@@ -249,6 +320,14 @@ var h4_sum = 0;
 var h5_sum = 0;
 var h6_sum = 0;
 var list = [];
+//节点的定义
+var sidebar = {
+  level: 0,
+  data: "",
+  proot: undefined,
+  children: []
+};
+var treeHtml = "";
 var flag = true; //如果是false,则需要进行count=1
 
 // 同步读取 模板内容
