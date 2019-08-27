@@ -6,15 +6,38 @@
     <title>${title}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="${keywords}" content="${content}" />
-    <link rel="stylesheet" type="text/css" href="${baseCssPath}" /> 
-    <link rel="stylesheet" type="text/css" href="${highlightCssPath}" /> 
+    <link rel="stylesheet" type="text/css" href="${baseCssPath}" />
+    <link rel="stylesheet" type="text/css" href="${highlightCssPath}" />
+    <style>
+      /* 回到顶部的样式 */
+      .top {
+        z-index: 1000;
+        position: fixed;
+        right: 60px;
+        bottom: 14%;
+        border: none;
+        box-shadow: 0px 1px 6px 2px #bbb2b2;
+        padding: 0.5rem;
+        border-radius: 6px;
+        opacity: 0.8;
+      }
+    </style>
   </head>
   <body>
+    <!-- 回到顶部的按钮 -->
+    <a class="top" href="#header">
+      <img
+        src="https://g.csdnimg.cn/side-toolbar/1.4/images/fanhuidingbucopy.png"
+        alt=""
+      />
+    </a>
     <div id="header"></div>
     <div id="sidebar">${treeHtml}</div>
-    <div id="toc"></div>
-    <div id="write">
-      ${body}
+    <div class="top-container">
+      <div id="toc">${toc}</div>
+      <div id="write">
+        ${body}
+      </div>
     </div>
   </body>
 </html>

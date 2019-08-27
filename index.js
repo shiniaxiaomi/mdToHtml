@@ -1,6 +1,6 @@
 //最好是使用绝对路径
-const srcDir = "C:\\Users\\yingjie.lu\\Desktop\\note"; //源路径
-const targetDir = "C:\\Users\\yingjie.lu\\Desktop\\html"; //目标路径
+const srcDir = "C:\\Users\\Administrator\\Desktop\\note"; //源路径
+const targetDir = "C:\\Users\\Administrator\\Desktop\\html"; //目标路径
 
 const baseCssPath = targetDir + "/css/github.css";
 const highlightCssPath = targetDir + "/css/highlight.css";
@@ -54,28 +54,16 @@ renderer.heading = function(text, level) {
     h6_sum = 0;
     flag = true;
     //节点的定义
-    sidebar = {
-      level: 0,
-      data: "",
-      proot: undefined,
-      children: []
-    };
-    treeHtml = "";
-
-    //遍历并递归生成sidebar
-    // list.map(item => {
-    //   findAndAdd(sidebar, item);
-    // });
-    // buildTree(sidebar);
-    // console.log(sidebar)
-    // console.log(treeHtml)
-    console.log(list)
-    list.map(item => {
-        findAndAdd(sidebar, item);
-      });
-      buildTree(sidebar);
-      console.log(sidebar)
-      console.log(treeHtml)
+    // sidebar = {
+    //   level: -1,
+    //   data: "大纲",
+    //   content: "",
+    //   proot: undefined,
+    //   children: []
+    // };
+    //清空sidebar的children属性
+    // delete sidebar.children;
+    // sidebar.children = [];
   }
 
   if (flag) {
@@ -139,7 +127,15 @@ renderer.heading = function(text, level) {
       content: content
     });
 
-    return `<h${level}>` + number +" "+ content + `</h${level}>`;
+    return (
+      `<h${level} id="` +
+      content +
+      `">` +
+      number +
+      " " +
+      content +
+      `</h${level}>`
+    );
   }
 };
 
@@ -150,6 +146,7 @@ function findAndAdd(srcNode, node) {
     srcNode.children.push({
       level: node.level,
       data: node.data,
+      content: node.content,
       proot: srcNode,
       children: []
     });
@@ -161,8 +158,8 @@ function findAndAdd(srcNode, node) {
   srcNode.children.map((item, index) => {
     //如果node属于该节点下,则再继续遍历
     if (
-      node.level >= item.level &&
-      node.data.substr(0, item.level) == item.data.substr(0, item.level)
+      node.data.length >= item.data.length &&
+      node.data.substr(0, item.data.length) == item.data
     ) {
       flag1 = true;
       findAndAdd(item, node);
@@ -172,6 +169,7 @@ function findAndAdd(srcNode, node) {
       item.proot.children.push({
         level: node.level,
         data: node.data,
+        content: node.content,
         proot: item.proot,
         children: []
       });
@@ -182,16 +180,35 @@ function findAndAdd(srcNode, node) {
 //生成treeHtml树状结构
 function buildTree(sidebar) {
   if (sidebar.children.length == 0) {
-    treeHtml += "<li>" + sidebar.data + "</li>";
+    treeHtml +=
+      "<li><a href='#" +
+      sidebar.content +
+      "'>" +
+      sidebar.data +
+      " " +
+      sidebar.content +
+      "</a></li>";
     return;
   }
 
-  treeHtml += "<li>" + sidebar.data + "</li>";
-  treeHtml += "<ul>";
+  if (sidebar.level != -1) {
+    treeHtml +=
+      "<li><a href='#" +
+      sidebar.content +
+      "'>" +
+      sidebar.data +
+      " " +
+      sidebar.content +
+      "</a></li>";
+    treeHtml += "<ul>";
+  }
+
   sidebar.children.map(item => {
     buildTree(item);
   });
-  treeHtml += "</ul>";
+  if (sidebar.level != -1) {
+    treeHtml += "</ul>";
+  }
 }
 
 //遍历目录,到每个目录或文件的时候回调
@@ -247,7 +264,18 @@ function copyCssDir(srcDir, targetDir) {
     srcDir,
     targetDir,
     function(srcPath, targetPath, filename) {
-      fs.writeFileSync(targetPath, fs.readFileSync(srcPath)); //复制文件
+      fs.readFile(srcPath, function(err, data) {
+        fs.writeFile(
+          targetPath,
+          minify(data.toString(), {
+            removeComments: true,
+            collapseWhitespace: true,
+            minifyJS: true,
+            minifyCSS: true
+          }),
+          function() {}
+        ); //复制并压缩css和js文件
+      });
     },
     function(srcPath, targetPath) {
       return true;
@@ -261,8 +289,17 @@ function build(srcPath, targetPath, filename, tempalte) {
     var body = marked(data.toString(), { renderer: renderer }).replace(
       "[TOC]",
       ""
-    ); //将[TOC]替换为空
+    );
     flag = false;
+
+    //遍历并递归生成sidebar
+    list.map(item => {
+      findAndAdd(sidebar, item);
+    });
+    buildTree(sidebar);
+    sidebar.children = []; //清空children数据
+    list = []; //清空list数据
+    console.log(treeHtml);
 
     //进行模板的参数替换
     var html = template
@@ -272,7 +309,10 @@ function build(srcPath, targetPath, filename, tempalte) {
       .replace("${baseCssPath}", baseCssPath)
       .replace("${highlightCssPath}", highlightCssPath)
       .replace("${treeHtml}", treeHtml)
+      .replace("${toc}", treeHtml)
       .replace("${body}", body);
+
+    treeHtml = ""; //清空treeHtml数据
 
     fs.writeFile(
       targetPath.slice(0, targetPath.length - 3) + ".html",
@@ -300,7 +340,9 @@ function mdToHtml(srcDir, targetDir) {
         build(srcPath, targetPath, filename, template);
       } else {
         //如果是其他文件,则进行复制
-        fs.writeFileSync(targetPath, fs.readFileSync(srcPath));
+        fs.readFile(srcPath, function(err, data) {
+          fs.writeFile(targetPath, data, function() {});
+        });
       }
     },
     function(srcPath, targetPath) {
@@ -322,8 +364,9 @@ var h6_sum = 0;
 var list = [];
 //节点的定义
 var sidebar = {
-  level: 0,
-  data: "",
+  level: -1,
+  data: "大纲",
+  content: "",
   proot: undefined,
   children: []
 };

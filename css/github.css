@@ -187,7 +187,7 @@ p > code {
 }
 
 /* 图片 */
-img{
+img {
   max-width: 100%;
 }
 
@@ -206,7 +206,7 @@ pre > code {
 }
 
 /* 滚动条 */
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
   width: 16px;
   height: 8px;
 }
@@ -219,4 +219,80 @@ pre > code {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(110, 110, 110);
+} */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0);
+  position: absolute;
+}
+::-webkit-scrollbar-corner {
+  background: 0 0;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  background-clip: padding-box;
+}
+
+/* ------------------ */
+* {
+  box-sizing: border-box;
+}
+
+#sidebar a,
+#toc a {
+  text-decoration: none;
+  color: black;
+}
+
+#sidebar {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  top: 0;
+  width: 250px;
+  overflow: auto;
+
+  background-color: #fafafa;
+  padding: 0.5rem 1rem;
+}
+.top-container {
+  margin-left: 250px;
+  position: relative;
+}
+#sidebar ul,
+#sidebar li {
+  list-style: none;
+  padding-left: 13px;
+  margin: 0px;
+}
+#sidebar li {
+  line-height: 17.6px;
+  font-size: 14px;
+  padding: 6px 0;
+}
+#sidebar li:hover {
+  background-color: #e2e2e3;
+  text-decoration-line: underline;
+}
+#toc li:hover {
+  text-decoration-line: underline;
+}
+
+#toc ul,
+#toc li {
+  list-style: none;
+  padding-left: 22px;
+  margin: 0px;
+}
+
+#toc li a {
+  color: #4183c4;
+}
+
+#toc {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+  font-size: 0.9rem;
 }
