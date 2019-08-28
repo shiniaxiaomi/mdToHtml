@@ -1,6 +1,6 @@
 //最好是使用绝对路径
-const srcDir = "C:\\Users\\Administrator\\Desktop\\note"; //源路径
-const targetDir = "C:\\Users\\Administrator\\Desktop\\html"; //目标路径
+const srcDir = "C:\\Users\\yingjie.lu\\Desktop\\note"; //源路径
+const targetDir = "C:\\Users\\yingjie.lu\\Desktop\\html"; //目标路径
 
 const baseCssPath = targetDir + "/css/github.css";
 const highlightCssPath = targetDir + "/css/highlight.css";
