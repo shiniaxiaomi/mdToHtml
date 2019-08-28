@@ -332,3 +332,8 @@ pre > code {
 #top-file a {
   display: flex;
 }
+
+.icon-down,
+.icon-right {
+  margin: 0px -2px;
+}
