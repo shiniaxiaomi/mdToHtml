@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>#{title}</title>
+    <title>陆英杰的博客</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="#{keywords}" content="#{content}" />
+    <meta name="陆英杰的博客" content="陆英杰的博客" />
     <link rel="stylesheet" type="text/css" href="#{cssPath}/github.css" />
     <link rel="stylesheet" type="text/css" href="#{cssPath}/highlight.css" />
     <link
@@ -28,27 +28,27 @@
           href="javascript:void;"
           id="top-buttons-file"
           onclick="changeTopButton('file')"
-          class="top-buttons-ele toc-buttons-file"
+          class="top-buttons-ele toc-buttons-file top-clicked"
           >文件</a
         >
         <a
           href="javascript:void;"
           id="top-buttons-toc"
           onclick="changeTopButton('toc')"
-          class="top-buttons-ele top-buttons-toc top-clicked"
+          class="top-buttons-ele top-buttons-toc"
           >目录</a
         >
       </div>
       <!-- 侧边栏的大纲 -->
-      <div id="top-content" class="top-content">#{treeHtml}</div>
-      <!-- 侧边栏的目录 -->
-      <div id="top-file" class="top-file" style="display:none">#{topFile}</div>
-    </div>
-    <div class="top-container">
-      <div id="toc">#{toc}</div>
-      <div id="write">
-        #{body}
+      <div id="top-content" class="top-content" style="display:none">
+        #{treeHtml}
       </div>
+      <!-- 侧边栏的目录 -->
+      <div id="top-file" class="top-file">#{topFile}</div>
+    </div>
+
+    <div class="top-container">
+      <h1>我是空白区</h1>
     </div>
   </body>
 </html>
