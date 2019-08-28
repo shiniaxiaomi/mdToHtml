@@ -8,7 +8,11 @@
     <meta name="${keywords}" content="${content}" />
     <link rel="stylesheet" type="text/css" href="${baseCssPath}" />
     <link rel="stylesheet" type="text/css" href="${highlightCssPath}" />
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_1374216_k9swzgtccir.css">
     <style>
+      *{
+        box-sizing: border-box;
+      }
       /* 回到顶部的样式 */
       .top {
         z-index: 1000;
@@ -21,6 +25,34 @@
         border-radius: 6px;
         opacity: 0.8;
       }
+
+      .top-buttons {
+          display:flex;
+          justify-content: space-around;
+          margin-bottom: 1rem;
+      }
+      .top-clicked {
+          border-bottom: solid 4px gray;
+          font-weight: bolder
+      }
+      .top-buttons-ele {
+          padding: 0 1.5rem;
+      }
+
+      .icon-folder{
+        font-size: 19px;
+        color: #a2a0a0;
+        padding: 0px 3px 0px 0px;
+      }
+      .icon-file{
+        font-size: 18px;
+        color: #888787;
+        padding: 0px 3px 0px 0px;
+      }
+      #top-file a{
+        display: flex;
+      }
+
     </style>
   </head>
   <body>
@@ -32,7 +64,17 @@
       />
     </a>
     <div id="header"></div>
-    <div id="sidebar">${treeHtml}</div>
+    <div id="sidebar">
+        <div class="top-buttons">
+            <a href="javascript:void;" id="top-buttons-file" onclick="changeTopButton('file')" class="top-buttons-ele toc-buttons-file">文件</a>
+            <a href="javascript:void;" id="top-buttons-toc" onclick="changeTopButton('toc')" class="top-buttons-ele top-buttons-toc top-clicked">目录</a>
+        </div>
+        <!-- 侧边栏的大纲 -->
+        <div id="top-content" class="top-content">${treeHtml}</div>
+        <!-- 侧边栏的目录 -->
+        <div id="top-file" class="top-file" style="display:none">${topFile}</div>
+      
+      </div>
     <div class="top-container">
       <div id="toc">${toc}</div>
       <div id="write">
@@ -41,3 +83,54 @@
     </div>
   </body>
 </html>
+
+
+<script>
+    let fileTitle;
+    let fileContent;
+    let tocTitle;
+    let tocContent;
+    let folderList;
+    
+    window.onload=function(){
+         fileTitle=document.querySelector("#top-buttons-file")
+         fileContent=document.querySelector("#top-file");
+        tocTitle=document.querySelector("#top-buttons-toc");
+        tocContent=document.querySelector("#top-content");
+        
+        //为所有目录添加监听器
+        folderList=document.querySelectorAll(".folder");
+        folderList.forEach(ele=>ele.addEventListener("click",folderClick));
+
+        //initialize
+        folderList.forEach(elm=>{
+          folderClick.call(elm);
+        })
+    }
+
+    function changeTopButton(type){
+        if(type==="file"){
+            //显示与隐藏
+            fileTitle.classList.add("top-clicked");
+            tocTitle.classList.remove("top-clicked");
+            
+            fileContent.style.display="block";
+            tocContent.style.display="none";
+        }else if(type==="toc"){
+            fileTitle.classList.remove("top-clicked");
+            tocTitle.classList.add("top-clicked");
+            
+            fileContent.style.display="none";
+            tocContent.style.display="block";
+        }
+    }
+    
+    function folderClick(){
+        
+        let display=this.parentElement.nextElementSibling.style.display;
+        this.parentElement.nextElementSibling.style.display=(display==="block" ||display==="")?"none":"block";
+        
+    }
+    
+    
+</script>

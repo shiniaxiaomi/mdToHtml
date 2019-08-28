@@ -53,17 +53,6 @@ renderer.heading = function(text, level) {
     h5_sum = 0;
     h6_sum = 0;
     flag = true;
-    //节点的定义
-    // sidebar = {
-    //   level: -1,
-    //   data: "大纲",
-    //   content: "",
-    //   proot: undefined,
-    //   children: []
-    // };
-    //清空sidebar的children属性
-    // delete sidebar.children;
-    // sidebar.children = [];
   }
 
   if (flag) {
@@ -211,6 +200,33 @@ function buildTree(sidebar) {
   }
 }
 
+//生成dirHtml树状结构
+function buildDirTree(dirData) {
+  if (dirData.children==undefined) {
+    if(dirData.isDir==true){
+      dirHtml+="<li><a class='folder' href='#'><i class='iconfont icon-folder'></i><div>"+dirData.name +"</div></a></li>";
+    }else{
+      dirHtml+="<li></i><a href='"+dirData.targetPath+"'><i class='iconfont icon-file'></i><div>"+dirData.name +"</div></a></li>";
+    }
+    return;
+  }
+
+  if (dirData.name != "总目录") {
+    if(dirData.isDir==true){
+      dirHtml+="<li><a class='folder' href='#'><i class='iconfont icon-folder'></i><div>"+dirData.name +"</div></a></li><ul>";
+    }else{
+      dirHtml+="<li></i><a href='"+dirData.targetPath+"'><i class='iconfont icon-file'></i><div>"+dirData.name +"</div></a></li><ul>";
+    }
+  }
+
+    dirData.children.map(item => {
+      buildDirTree(item);
+    });
+  if (dirData.name != "总目录") {
+    dirHtml += "</ul>";
+  }
+}
+
 //遍历目录,到每个目录或文件的时候回调
 function mapDir(srcDir, targetDir, fileCallback, dirCallback) {
   //如果目录不存在,则创建
@@ -229,7 +245,7 @@ function mapDir(srcDir, targetDir, fileCallback, dirCallback) {
       let targetPath = path.join(targetDir, filename);
       fs.stat(srcPath, (err, stats) => {
         if (stats.isDirectory()) {
-          var flag = dirCallback(srcPath, targetPath);
+          var flag = dirCallback(srcPath, targetPath, filename);
           if (flag) {
             mapDir(srcPath, targetPath, fileCallback, dirCallback);
           }
@@ -238,6 +254,42 @@ function mapDir(srcDir, targetDir, fileCallback, dirCallback) {
         }
       });
     });
+  });
+}
+
+//同步获取目录的目录结构信息
+function getDirTree(srcDir,targetDir, dirData){
+  _getDirTree(srcDir,targetDir,dirData)
+  //生成html结构
+ buildDirTree(dirData);
+ console.log(dirHtml);
+}
+ 
+//同步获取目录的目录结构信息
+function _getDirTree(srcDir,targetDir, dirData) {
+  var files = fs.readdirSync(srcDir);
+  files.map(item => {
+    let srcPath = path.join(srcDir, item);
+    let targetPath = path.join(targetDir, item);
+    var stats = fs.statSync(srcPath);
+    if (stats.isDirectory()) {
+      var buff = {
+        isDir: true,
+        name: item,
+        srcPath: srcPath,
+        targetPath: targetPath,
+        children: []
+      };
+      dirData.children.push(buff);
+      _getDirTree(srcPath,targetPath, buff);
+    } else {
+      dirData.children.push({
+        isDir: false,
+        name: item,
+        srcPath: srcPath,
+        targetPath: targetPath.replace(".md",".html"),
+      });
+    }
   });
 }
 
@@ -263,7 +315,7 @@ function copyCssDir(srcDir, targetDir) {
   mapDir(
     srcDir,
     targetDir,
-    function(srcPath, targetPath, filename) {
+    function(srcPath, targetPath, filename, pName) {
       fs.readFile(srcPath, function(err, data) {
         fs.writeFile(
           targetPath,
@@ -277,7 +329,7 @@ function copyCssDir(srcDir, targetDir) {
         ); //复制并压缩css和js文件
       });
     },
-    function(srcPath, targetPath) {
+    function(srcPath, targetPath, filename, pName) {
       return true;
     }
   );
@@ -299,7 +351,7 @@ function build(srcPath, targetPath, filename, tempalte) {
     buildTree(sidebar);
     sidebar.children = []; //清空children数据
     list = []; //清空list数据
-    console.log(treeHtml);
+    // console.log(treeHtml);
 
     //进行模板的参数替换
     var html = template
@@ -309,6 +361,7 @@ function build(srcPath, targetPath, filename, tempalte) {
       .replace("${baseCssPath}", baseCssPath)
       .replace("${highlightCssPath}", highlightCssPath)
       .replace("${treeHtml}", treeHtml)
+      .replace("${topFile}", dirHtml)
       .replace("${toc}", treeHtml)
       .replace("${body}", body);
 
@@ -345,7 +398,7 @@ function mdToHtml(srcDir, targetDir) {
         });
       }
     },
-    function(srcPath, targetPath) {
+    function(srcPath, targetPath, filename) {
       //对.git文件夹不做处理(如果路径中不包含.img并且包换.git,说明是.git仓库文件)
       if (srcPath.search(".git") != -1 && srcPath.search(".img") == -1) {
         return false;
@@ -355,12 +408,14 @@ function mdToHtml(srcDir, targetDir) {
   );
 }
 
+
 var h1_sum = 0;
 var h2_sum = 0;
 var h3_sum = 0;
 var h4_sum = 0;
 var h5_sum = 0;
 var h6_sum = 0;
+//标题list
 var list = [];
 //节点的定义
 var sidebar = {
@@ -370,11 +425,21 @@ var sidebar = {
   proot: undefined,
   children: []
 };
+//目录节点定义
+var dirData = {
+  isDir: true,
+  name: "总目录",
+  children: []
+};
+var dirHtml="";
 var treeHtml = "";
 var flag = true; //如果是false,则需要进行count=1
 
 // 同步读取 模板内容
 var template = fs.readFileSync("template.html").toString();
+// 同步获取目录信息
+getDirTree(srcDir,targetDir, dirData);
+console.log(dirData);
 // 删除目标路径下的所有文件
 // delDir(targetDir);
 // 复制css到目标路径下
