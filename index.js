@@ -459,12 +459,13 @@ function build(srcPath, targetPath, filename, tempalte) {
 }
 
 //构建inddex.html
-function buildIndexHtml(cssPath, treeHtml, dirHtml) {
+function buildIndexHtml(cssPath,jsPath, treeHtml, dirHtml) {
   var template = fs.readFileSync("./index.html");
   //进行模板的参数替换
   var html = template
     .toString()
     .replace(new RegExp("#{cssPath}", "gm"), cssPath)
+    .replace("#{jsPath}", jsPath)
     .replace("#{treeHtml}", treeHtml)
     .replace("#{topFile}", dirHtml);
 
@@ -553,7 +554,7 @@ try {
 }
 
 //构建index.html
-buildIndexHtml(cssPath, "", dirHtml);
+buildIndexHtml(cssPath,jsPath, "", dirHtml);
 
 // 复制css到目标路径下
 copyDir("./css", targetDir + "/css");
