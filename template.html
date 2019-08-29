@@ -10,8 +10,10 @@
     <link rel="stylesheet" type="text/css" href="#{cssPath}/highlight.css" />
     <link
       rel="stylesheet"
-      href="https://at.alicdn.com/t/font_1374216_3j8f2tz0cxn.css"
+      href="https://at.alicdn.com/t/font_1374216_2yvlhmjt4nt.css"
     />
+    <script type="text/javascript" src="#{jsPath}/my.js"></script>
+
   </head>
   <body>
     <!-- 回到顶部的按钮 -->
@@ -25,14 +27,14 @@
     <div id="sidebar">
       <div class="top-buttons">
         <a
-          href="javascript:void;"
+          href="javascript:void(0);"
           id="top-buttons-file"
           onclick="changeTopButton('file')"
           class="top-buttons-ele toc-buttons-file"
           >文件</a
         >
         <a
-          href="javascript:void;"
+          href="javascript:void(0);"
           id="top-buttons-toc"
           onclick="changeTopButton('toc')"
           class="top-buttons-ele top-buttons-toc top-clicked"
@@ -53,70 +55,3 @@
   </body>
 </html>
 
-<script>
-  let fileTitle;
-  let fileContent;
-  let tocTitle;
-  let tocContent;
-  let folderList;
-
-  window.onload = function() {
-    fileTitle = document.querySelector("#top-buttons-file");
-    fileContent = document.querySelector("#top-file");
-    tocTitle = document.querySelector("#top-buttons-toc");
-    tocContent = document.querySelector("#top-content");
-
-    //为所有目录添加监听器
-    folderList = document.querySelectorAll(".folder");
-    folderList.forEach(ele => ele.addEventListener("click", folderClick));
-
-    //initialize
-    //全部文件夹是打开的,则设置箭头向下
-    document.querySelectorAll(".icon-right").forEach(ele => {
-      ele.style.display = "none";
-    });
-
-    // folderList.forEach(elm => {
-    //   folderClick.call(elm);
-    // });
-  };
-
-  function changeTopButton(type) {
-    if (type === "file") {
-      //显示与隐藏
-      fileTitle.classList.add("top-clicked");
-      tocTitle.classList.remove("top-clicked");
-
-      fileContent.style.display = "block";
-      tocContent.style.display = "none";
-    } else if (type === "toc") {
-      fileTitle.classList.remove("top-clicked");
-      tocTitle.classList.add("top-clicked");
-
-      fileContent.style.display = "none";
-      tocContent.style.display = "block";
-    }
-  }
-
-  function folderClick() {
-    //子级的隐藏和显示
-    let display = this.parentElement.nextElementSibling.style.display;
-    this.parentElement.nextElementSibling.style.display =
-      display === "block" || display === "" ? "none" : "block";
-
-    //文件夹箭头的变动
-    var down = this.querySelector(".icon-down");
-    var right = this.querySelector(".icon-right");
-    if (down != null && right != null) {
-      down.style.display =
-        down.style.display === "block" || down.style.display === ""
-          ? "none"
-          : "block";
-
-      right.style.display =
-        right.style.display === "block" || down.style.display === ""
-          ? "none"
-          : "block";
-    }
-  }
-</script>

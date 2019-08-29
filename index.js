@@ -1,6 +1,6 @@
 //最好是使用绝对路径
-const srcDir = "C:\\Users\\Administrator\\Desktop\\note"; //源路径
-const targetDir = "C:\\Users\\Administrator\\Desktop\\html"; //目标路径
+const srcDir = "C:\\Users\\yingjie.lu\\Desktop\\note"; //源路径
+const targetDir = "C:\\Users\\yingjie.lu\\Desktop\\html"; //目标路径
 
 const cssPath = targetDir + "\\css";
 const jsPath = targetDir + "\\js";
@@ -289,16 +289,35 @@ function mapDir(srcDir, targetDir, fileCallback, dirCallback) {
 
 //同步获取目录的目录结构信息
 function getDirTree(srcDir, targetDir, dirData) {
+ 
+  var buff={
+    isDir: true,
+    name: "总目录",
+    children: []
+  }
+
+  _getDirTree(srcDir, targetDir, buff);
+
+  //调整dir的目录结构,将文件夹排在最上面
   dirData.children.push({
     isDir: false,
     name: "首页",
     srcPath: srcDir + "\\index.html",
     targetPath: targetDir + "\\index.html"
   });
-  _getDirTree(srcDir, targetDir, dirData);
+  buff.children.map(item=>{//文件夹
+    if(item.isDir){
+      dirData.children.push(item)
+    }
+  })
+  buff.children.map(item=>{//文件
+    if(!item.isDir){
+      dirData.children.push(item)
+    }
+  })
+
   //生成html结构
   buildDirTree(dirData);
-  // console.log(dirHtml);
 }
 
 //同步获取目录的目录结构信息
@@ -352,21 +371,27 @@ function delDir(path) {
   }
 }
 
-//复制css目录
-function copyCssDir(srcDir, targetDir) {
+//复制目录
+function copyDir(srcDir, targetDir) {
   mapDir(
     srcDir,
     targetDir,
     function(srcPath, targetPath, filename, pName) {
       fs.readFile(srcPath, function(err, data) {
-        fs.writeFile(
-          targetPath,
-          minify(data.toString(), {
+        var buff=undefined;
+        if(filename.indexOf(".css")!=-1){
+          buff=minify(data.toString(), {
             removeComments: true,
             collapseWhitespace: true,
             minifyJS: true,
             minifyCSS: true
-          }),
+          })
+        }else{
+          buff=data;
+        } 
+        fs.writeFile(
+          targetPath,
+          buff,
           function() {}
         ); //复制并压缩css和js文件
       });
@@ -380,10 +405,12 @@ function copyCssDir(srcDir, targetDir) {
 //将markdown生成html
 function build(srcPath, targetPath, filename, tempalte) {
   fs.readFile(srcPath, (err, data) => {
-    var body = marked(data.toString(), { renderer: renderer }).replace(
-      "[TOC]",
-      ""
-    );
+    var body=marked(data.toString(), { renderer: renderer });
+    var tocFlag=body.indexOf("[TOC]")!=-1;//如果tocFlag==true,则表示有TOC
+    if(tocFlag){
+        body=body.replace( "[TOC]","")
+    }
+
     flag = false;
 
     //遍历并递归生成sidebar
@@ -395,15 +422,23 @@ function build(srcPath, targetPath, filename, tempalte) {
     list = []; //清空list数据
     // console.log(treeHtml);
 
+    var html=undefined;
+    //判断有没有TOC
+    if(tocFlag){
+      html=template.replace("#{toc}", treeHtml);
+    }else{
+      html=template.replace("#{toc}", "");
+    }
+
     //进行模板的参数替换
-    var html = template
+    html = html
       .replace("#{title}", filename)
       .replace("#{keywords}", filename)
       .replace("#{content}", filename)
       .replace(new RegExp("#{cssPath}", "gm"), cssPath)
+      .replace("#{jsPath}",jsPath)
       .replace("#{treeHtml}", treeHtml)
       .replace("#{topFile}", dirHtml)
-      .replace("#{toc}", treeHtml)
       .replace("#{body}", body);
 
     treeHtml = ""; //清空treeHtml数据
@@ -432,6 +467,11 @@ function buildIndexHtml(cssPath, treeHtml, dirHtml) {
     .replace(new RegExp("#{cssPath}", "gm"), cssPath)
     .replace("#{treeHtml}", treeHtml)
     .replace("#{topFile}", dirHtml);
+
+    var flag=fs.existsSync(targetDir);
+    if(!flag){
+      fs.mkdirSync(targetDir,{recursive:true});
+    }
 
   fs.writeFileSync(
     targetDir + "\\index.html",
@@ -516,6 +556,8 @@ try {
 buildIndexHtml(cssPath, "", dirHtml);
 
 // 复制css到目标路径下
-copyCssDir("./css", targetDir + "/css");
+copyDir("./css", targetDir + "/css");
+// 复制js到目标路径下
+copyDir("./js", targetDir + "/js");
 // 将markdown转化成html
 mdToHtml(srcDir, targetDir);

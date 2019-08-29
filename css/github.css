@@ -315,18 +315,23 @@ pre > code {
   padding: 0 1.5rem;
 }
 
+.folder{
+  position: relative;
+}
+
 .icon-folder {
   font-size: 19px;
-  color: #a2a0a0;
+  color: #888888;
   padding: 0px 3px 0px 0px;
+  
 }
-.icon-folder2 {
+/* .icon-folder2 {
   color: #a5a5a5;
   padding: 0px 3px 0px 0px;
-}
+} */
 .icon-file {
   font-size: 18px;
-  color: #888787;
+  color: #888888;
   padding: 0px 3px 0px 0px;
 }
 #top-file a {
@@ -335,5 +340,8 @@ pre > code {
 
 .icon-down,
 .icon-right {
+  color: #888888;
   margin: 0px -2px;
+  position: absolute;
+  left: -0.7rem;
 }
