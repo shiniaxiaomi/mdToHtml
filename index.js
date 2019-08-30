@@ -1,9 +1,12 @@
 //最好是使用绝对路径
 const srcDir = "C:\\Users\\yingjie.lu\\Desktop\\note"; //源路径
-const targetDir = "C:\\Users\\yingjie.lu\\Desktop\\html"; //目标路径
+const targetDir = "D:\\nginx-1.16.0\\html"; //目标路径
+// const gitUrl="https://github.com/shiniaxiaomi/note.git";
+const gitUrl="https://github.com/shiniaxiaomi/mdToHtml.git";
+// const targetDir = "C:\\Users\\yingjie.lu\\Desktop\\html"; //目标路径
 
-const cssPath = targetDir + "\\css";
-const jsPath = targetDir + "\\js";
+// const linkDir="localhost"
+
 
 // Create reference instance
 const marked = require("marked"); //markdown解析
@@ -11,6 +14,7 @@ var fs = require("fs");
 const path = require("path");
 const highlight = require("highlight.js"); //代码高亮
 const minify = require("html-minifier").minify; //文本压缩
+const shell = require('shelljs');
 
 // Set options
 // `highlight` example uses `highlight.js`
@@ -211,14 +215,14 @@ function buildDirTree(dirData) {
           "</div></a></li>";
       } else {
         dirHtml +=
-          "<li><a class='folder' href='#'><i class='iconfont icon-down'></i><i class='iconfont icon-right'></i><i class='iconfont icon-folder'></i><div>" +
+          "<li><a class='folder' href='#'><i class='iconfont icon-down'></i><i class='iconfont icon-folder'></i><div>" +
           dirData.name +
           "</div></a></li>";
       }
     } else {
       dirHtml +=
         "<li></i><a href='" +
-        dirData.targetPath +
+        dirData.link +
         "'><i class='iconfont icon-file'></i><div>" +
         dirData.name +
         "</div></a></li>";
@@ -235,14 +239,14 @@ function buildDirTree(dirData) {
           "</div></a></li><ul>";
       } else {
         dirHtml +=
-          "<li><a class='folder' href='#'><i class='iconfont icon-down'></i><i class='iconfont icon-right'></i><i class='iconfont icon-folder'></i><div>" +
+          "<li><a class='folder' href='#'><i class='iconfont icon-down'></i><i class='iconfont icon-folder'></i><div>" +
           dirData.name +
           "</div></a></li><ul>";
       }
     } else {
       dirHtml +=
         "<li></i><a href='" +
-        dirData.targetPath +
+        dirData.link +
         "'><i class='iconfont icon-file'></i><div>" +
         dirData.name +
         "</div></a></li><ul>";
@@ -288,7 +292,7 @@ function mapDir(srcDir, targetDir, fileCallback, dirCallback) {
 }
 
 //同步获取目录的目录结构信息
-function getDirTree(srcDir, targetDir, dirData) {
+function getDirTree(srcDir, targetDir,linkDir1, dirData) {
  
   var buff={
     isDir: true,
@@ -296,14 +300,15 @@ function getDirTree(srcDir, targetDir, dirData) {
     children: []
   }
 
-  _getDirTree(srcDir, targetDir, buff);
+  _getDirTree(srcDir, targetDir,linkDir1, buff);
 
   //调整dir的目录结构,将文件夹排在最上面
   dirData.children.push({
     isDir: false,
     name: "首页",
     srcPath: srcDir + "\\index.html",
-    targetPath: targetDir + "\\index.html"
+    targetPath: targetDir + "\\index.html",
+    link: "/index.html"
   });
   buff.children.map(item=>{//文件夹
     if(item.isDir){
@@ -321,7 +326,7 @@ function getDirTree(srcDir, targetDir, dirData) {
 }
 
 //同步获取目录的目录结构信息
-function _getDirTree(srcDir, targetDir, dirData) {
+function _getDirTree(srcDir, targetDir,linkDir, dirData) {
   var files = fs.readdirSync(srcDir);
   if (files.length != 0) {
     dirData.isNull = false; //标记不为空目录
@@ -332,6 +337,7 @@ function _getDirTree(srcDir, targetDir, dirData) {
   files.map(item => {
     let srcPath = path.join(srcDir, item);
     let targetPath = path.join(targetDir, item);
+    let linkPath= path.join(linkDir,item);
     var stats = fs.statSync(srcPath);
     if (stats.isDirectory()) {
       var buff = {
@@ -339,16 +345,18 @@ function _getDirTree(srcDir, targetDir, dirData) {
         name: item,
         srcPath: srcPath,
         targetPath: targetPath,
+        link:linkPath.replace(".md",".html"),
         children: []
       };
       dirData.children.push(buff);
-      _getDirTree(srcPath, targetPath, buff);
+      _getDirTree(srcPath, targetPath,linkPath, buff);
     } else {
       dirData.children.push({
         isDir: false,
         name: item,
         srcPath: srcPath,
-        targetPath: targetPath.replace(".md", ".html")
+        targetPath: targetPath.replace(".md", ".html"),
+        link:linkPath.replace(".md",".html")
       });
     }
   });
@@ -435,8 +443,6 @@ function build(srcPath, targetPath, filename, tempalte) {
       .replace("#{title}", filename)
       .replace("#{keywords}", filename)
       .replace("#{content}", filename)
-      .replace(new RegExp("#{cssPath}", "gm"), cssPath)
-      .replace("#{jsPath}",jsPath)
       .replace("#{treeHtml}", treeHtml)
       .replace("#{topFile}", dirHtml)
       .replace("#{body}", body);
@@ -459,13 +465,11 @@ function build(srcPath, targetPath, filename, tempalte) {
 }
 
 //构建inddex.html
-function buildIndexHtml(cssPath,jsPath, treeHtml, dirHtml) {
+function buildIndexHtml( treeHtml, dirHtml) {
   var template = fs.readFileSync("./index.html");
   //进行模板的参数替换
   var html = template
     .toString()
-    .replace(new RegExp("#{cssPath}", "gm"), cssPath)
-    .replace("#{jsPath}", jsPath)
     .replace("#{treeHtml}", treeHtml)
     .replace("#{topFile}", dirHtml);
 
@@ -535,30 +539,47 @@ var dirData = {
 };
 var dirHtml = "";
 var treeHtml = "";
+var template="";//template.html中的内容
 var flag = true; //如果是false,则需要进行count=1
 
-// 同步读取 模板内容
-var template = fs.readFileSync("template.html").toString();
-// 同步获取目录信息
-getDirTree(srcDir, targetDir, dirData);
-// console.log(dirData);
-// 删除目标路径下的所有文件
-try {
-  delDir(targetDir);
-} catch (err) {
-  if (err.code == "EBUSY") {
-    // console.log("file is busy");
-  } else {
-    console.log(err);
-  }
-}
 
-//构建index.html
-buildIndexHtml(cssPath,jsPath, "", dirHtml);
+//进入到srcDir目录下,将github上笔记了克隆到源目录下
+shell.exec("git clone "+gitUrl+" "+srcDir, function(code, stdout, stderr) {
+    if(code!=0){//报错
+        console.log(new Date().toLocaleString()+'克隆失败:'+stderr);
+    }else{
+        console.log(new Date().toLocaleString()+'克隆成功:'+stdout);
+        
+        //执行md构建程序
 
-// 复制css到目标路径下
-copyDir("./css", targetDir + "/css");
-// 复制js到目标路径下
-copyDir("./js", targetDir + "/js");
-// 将markdown转化成html
-mdToHtml(srcDir, targetDir);
+        // 同步读取 模板内容
+        tempalte = fs.readFileSync("template.html").toString();
+        // 同步获取目录信息
+        getDirTree(srcDir, targetDir,"/", dirData);
+        // console.log(dirData);
+        // 删除目标路径下的所有文件
+        try {
+          delDir(targetDir);
+        } catch (err) {
+          if (err.code == "EBUSY") {
+            // console.log("file is busy");
+          } else {
+            console.log(err);
+          }
+        }
+
+        //构建index.html
+        buildIndexHtml( "", dirHtml);
+
+        // 复制css到目标路径下
+        copyDir("./css", targetDir + "/css");
+        // 复制js到目标路径下
+        copyDir("./js", targetDir + "/js");
+        // 将markdown转化成html
+        mdToHtml(srcDir, targetDir);
+
+        
+    }
+  })
+
+

@@ -14,6 +14,6 @@
     "html-minifier": "^4.0.0",
     "marked": "^0.7.0",
     "path": "^0.12.7",
-    "yuicompressor": "^2.4.8"
+    "shelljs": "^0.8.3"
   }
 }

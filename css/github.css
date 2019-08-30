@@ -345,3 +345,18 @@ pre > code {
   position: absolute;
   left: -0.7rem;
 }
+
+.icon-up{
+  font-size: 24px !important;
+  line-height: 1.7rem;
+  color: #6d6d6d;
+  padding: 0px 2px;
+}
+
+.top{
+  text-decoration-line: none
+}
+
+.folder-open{
+  transform: rotate(-90deg);
+}
